@@ -37,37 +37,39 @@ def getConceptSubClasses(request):
             print(result)
             if(len(result)!=0):
                 iteration = (len(result) // 2)
-                response = "'concept 0':" + "'" + result[iteration][0] + "'"
-                for i in range(iteration - 1):
+                response = "'concept 0':" + "'" + result[iteration-1][0] + "'"
+                for i in range(iteration-1):
                     j = i + 1
                     it = str(j)
-                    response = response + ",'concept " + it + ":'" + result[j][0] + "'"
+                    response = response + ",'concept " + it + ":'" + result[i][0] + "'"
                 response = "{" + response + "}"
                 return JsonResponse(response, safe=False)
+
             else:
-                print("message:no concepts")
+                Instancequery = "MATCH (n:owl__NamedIndividual)-[rdf_type]->(f:n4sch__Class) WHERE f.n4sch__name='%s' RETURN n.uri" % classe
+                Instanceresult = db.cypher_query(Instancequery)[0]
+                if (len(Instanceresult) != 0):
+                    instance = Instanceresult[0][0]
+                    endString = len(instance)
+                    responseInstance = "'instance 0':" + "'" + instance[startString:endString] + "'"
+                    max = len(Instanceresult)
+                    for i in range(max - 1):
+                        j = i + 1
+                        it = str(j)
+                        instances = Instanceresult[j][0]
+                        endString = len(instances)
+                        resultInstance = instances[startString:endString]
+                        responseInstance = responseInstance + ",'instance " + it + "':'" + resultInstance + "'"
+                    response = "{" + responseInstance + "}"
+                    return JsonResponse(response, safe=False)
+
+                else:
+                     response = {"Message": "No Content"}
+                     return JsonResponse(response, safe=False)
 
             # Get Individuals
-            Instancequery = "MATCH (n:owl__NamedIndividual)-[rdf_type]->(f:n4sch__Class) WHERE f.n4sch__name='%s' RETURN n.uri" %classe
-            Instanceresult = db.cypher_query(Instancequery)[0]
-            instance = Instanceresult[0][0]
-            endString = len(instance)
-            responseInstance= "'instance 0':" + "'" +instance[startString:endString]+"'"
-            if(len(Instanceresult)!=0):
-                max = len(Instanceresult)
-                for i in range(max-1):
-                    j=i+1
-                    it = str(j)
-                    instances = Instanceresult[j][0]
-                    endString = len(instances)
-                    resultInstance = instances[startString:endString]
-                    responseInstance = responseInstance + ",'instance" + it + "':'" + resultInstance + "'"
-                response = "{" + responseInstance + "}"
 
-            else:
-                print("no inviduals")
-                response={"Message":"No Content"}
-            return JsonResponse(response, safe=False)
+
 
 
         except:
