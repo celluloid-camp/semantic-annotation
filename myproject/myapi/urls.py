@@ -4,6 +4,7 @@ from django.urls import path
 urlpatterns = [
      path('spectacle',getFirstConcepts),
      path('conceptSubClass',getConceptSubClasses),
+     path('spec',createSpectale),
      # path('getAllPersons',getAllPersons),
      # path('city',cityDetails),
      # path('getAllCities',getAllCities),
