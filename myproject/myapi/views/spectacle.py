@@ -20,12 +20,9 @@ def getFirstConcepts(request):
         try:
             decor = db.cypher_query("MATCH(D:owl__Class) WHERE D.uri='%s' return D.uri" %D)
             emotion = db.cypher_query("MATCH(D:owl__Class) WHERE D.uri='%s' return D.uri" %E)
-            judgement = db.cypher_query("MATCH(D:owl__Class) WHERE D.uri='%s' return D.uri" %J)
             interpretation = db.cypher_query("MATCH(D:owl__Class) WHERE D.uri='%s' return D.uri" %I)
             emotionuri=emotion[0][0][0]
             resultemotion = emotionuri[len(path):len(emotionuri)]
-            jugementuri = judgement[0][0][0]
-            resultjugement = jugementuri[len(path):len(jugementuri)]
             interpretationuri = interpretation[0][0][0]
             resultinterpretation=  interpretationuri[len(path):len( interpretationuri)]
             decoruri = decor[0][0][0]
@@ -33,7 +30,6 @@ def getFirstConcepts(request):
             response = {
                 "decor": resultdecor,
                 "emotion":resultemotion,
-                "judgement": resultjugement,
                 "interpretation": resultinterpretation
             }
             return JsonResponse(response, safe=False)
@@ -45,6 +41,7 @@ def getFirstConcepts(request):
 def getConceptSubClasses(request):
     path = Parameters.Params['Ontology_Path']
     c = request.GET.get('concept')
+    print(c)
     if request.method == 'GET':
         uri = path+c
         # path = len("http://www.semanticweb.org/larbim/ontologies/2022/0/Emotion-initial-version#")+c
@@ -70,7 +67,7 @@ def getConceptSubClasses(request):
                 #-------------------------------------------------------- Get Individuals
                 Instancequery = "MATCH (n:owl__NamedIndividual)-[rdf_type]->(f:owl__Class) WHERE f.uri='%s' RETURN n.uri" % uri
                 Instanceresult = db.cypher_query(Instancequery)[0]
-                if (len(Instanceresult) != 0):
+                if (len(Instanceresult) != 0 and  Instanceresult[0][0]!= None ):
                     instance = Instanceresult[0][0]
                     endString = len(instance)
                     responseInstance = "'instance 0':" + "'" + instance[len(path):endString] + "'"

@@ -7,41 +7,38 @@ from . import Parameters
 
 
 @csrf_exempt
-def createInstance(type,objet):
+def createInstance(objet):
         path = Parameters.Params['Ontology_Path']
         uri= path+ objet
+        type=typeOfObject(objet)
+        print("type is: ", type)
         if(type=="instance"):
             try:
                 insertQuery = "MATCH (n:owl__NamedIndividual) WHERE n.uri = '%s'CREATE (s:owl__NamedIndividual{id:apoc.create.uuid(),label:'concept'})-[r:rdf_type]->(n) RETURN s.id" % (uri)
                 query = db.cypher_query(insertQuery)[0]
                 idInstance= query[0][0]
-
                 return idInstance
             except:
                 # response = {"error": "Error occurred"}
                 return 0
         else:
+            print("iam not an instance")
             if(type=="classe"):
+                print("i am a class")
                 try:
                     insertQuery = "MATCH (n:owl__Class) WHERE n.uri = '%s' CREATE (s:owl__NamedIndividual{id:apoc.create.uuid(), label:'concept'})-[r:rdf_type]->(n) RETURN s.id" % (uri)
                     query = db.cypher_query(insertQuery)[0]
                     idInstance= query[0][0]
-
                     return idInstance
                 except:
                     # response = {"error": "Error occurred"}
                     return 0
             else:
-                response = {"error": "Object type not specified"}
-                return JsonResponse(response, safe=False)
+                print("am not a class")
+                return 0
 #------------------------------------------- Creer une relation de type "relation" ayant un domaine et un range-------------------------------------------
 @csrf_exempt
 def createRelation(domain,relation,range):
-    # if request.method == 'POST':
-    #     json_data = json.loads(request.body)
-    #     domain= json_data['idDomain']
-    #     range= json_data['idRange']
-    #     relation=json_data['relation']
         r=Parameters.Params['Ontology_Path']+relation
         print(r)
         try:
@@ -56,3 +53,20 @@ def createRelation(domain,relation,range):
         except:
                     return 0
 
+def typeOfObject(concept):
+    if len(concept)!=0:
+        uri=Parameters.Params['Ontology_Path']+concept
+        GetConceptQuery = "MATCH (n:owl__Class) WHERE n.uri = '%s' RETURN n" % uri
+        result= db.cypher_query(GetConceptQuery )[0]
+        # print("afficher resultat:", result)
+        if len(result)==0:
+           # Test if objet is an instance:
+           GetConceptQuery = "MATCH (n:owl__NamedIndividual) WHERE n.uri = '%s' RETURN n" % uri
+           res=db.cypher_query(GetConceptQuery)[0]
+           if(len(res)==0):
+               type=0
+           else:
+               type = "instance"
+        else:
+            type="classe"
+        return type

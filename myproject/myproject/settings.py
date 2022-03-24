@@ -111,7 +111,8 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/4.0/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
-
+CORS_ALLOW_ALL_ORIGINS = True
+Access_Control_Allow_Origin= True
 TIME_ZONE = 'UTC'
 
 USE_I18N = True
