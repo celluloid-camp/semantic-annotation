@@ -21,7 +21,7 @@ def createAnnotation(request):
         spectacle = projectId
         # typeConcept=json_data['type']
         objet = json_data['objet']
-        typeRelation=typeOfRelation(objet)
+        typeRelation=json_data['relation']
         print("type de relation", typeRelation)
         try:
             insertAnnotationQuery="MATCH (n:owl__Class) WHERE n.uri = 'http://www.semanticweb.org/larbim/ontologies/2022/0/Emotion-initial-version#Annotation' CREATE (s:owl__NamedIndividual{id:apoc.create.uuid(),projectId:'%s', userId:'%s',commentaire:'%s',startTime:'%s', stopTime:'%s', userName:'%s', label:'annotation'})-[r:rdf_type]->(n)  RETURN s.id" %(projectId,userId,commentaire,startTime,stopTime,userName)
@@ -49,23 +49,16 @@ def createAnnotation(request):
    # **************************     # Get annotation of spectacle
     if request.method == 'GET':
             path = Parameters.Params['Ontology_Path']
-            # idSpectacle= request.GET.get('idSpectacle')
+            idProject= request.GET.get('idProject')
             D = path + "Annotation"
             try:
-                annotations = db.cypher_query("MATCH (n:owl__NamedIndividual)-[rdf_type]->(f:owl__Class) WHERE f.uri='%s' RETURN n.commentaire" % D)[0]
+                annotations = db.cypher_query("MATCH (n:owl__NamedIndividual)-[rdf_type]->(f:owl__Class) WHERE f.uri='%s' AND n.projectId='%s' RETURN n.commentaire" % (D,idProject))[0]
                 max=len(annotations)
-                responseInstance = ""
+                lis = []
                 for i in range(max):
-                    j = i +1
-                    it = str(j)
                     instance = annotations[i][0]
-                    responseInstance = responseInstance + "'annotation " + it + "':'" + instance + "',"
-                    print(responseInstance)
-                    response = "{" + responseInstance + "}"
-                # annotation = uri[len(path):len(uri)]
-                #     response = {
-                #     "annotation": uri
-                # }
+                    lis.append(instance)
+                response = {"annotation": lis}
                 return JsonResponse(response, safe=False)
             except:
                 response = {"error": "Error occurred"}
