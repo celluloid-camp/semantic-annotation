@@ -16,28 +16,28 @@ def createAnnotation(request):
         userId=json_data['userId']
         startTime=json_data['startTime']
         stopTime=json_data['stopTime']
-        spectacle = json_data['idSpectacle']
+        userName=json_data['userName']
+        # spectacle = json_data['idSpectacle']
+        spectacle = projectId
         # typeConcept=json_data['type']
         objet = json_data['objet']
-        typeRelation=json_data['relation']
+        typeRelation=typeOfRelation(objet)
+        print("type de relation", typeRelation)
         try:
-            insertAnnotationQuery="MATCH (n:owl__Class) WHERE n.uri = 'http://www.semanticweb.org/larbim/ontologies/2022/0/Emotion-initial-version#Annotation' CREATE (s:owl__NamedIndividual{id:apoc.create.uuid(),projectId:'%s', userId:'%s',commentaire:'%s',startTime:'%s', stopTime:'%s', label:'annotation'})-[r:rdf_type]->(n)  RETURN s.id" %(projectId,userId,commentaire,startTime,stopTime)
+            insertAnnotationQuery="MATCH (n:owl__Class) WHERE n.uri = 'http://www.semanticweb.org/larbim/ontologies/2022/0/Emotion-initial-version#Annotation' CREATE (s:owl__NamedIndividual{id:apoc.create.uuid(),projectId:'%s', userId:'%s',commentaire:'%s',startTime:'%s', stopTime:'%s', userName:'%s', label:'annotation'})-[r:rdf_type]->(n)  RETURN s.id" %(projectId,userId,commentaire,startTime,stopTime,userName)
             query= db.cypher_query(insertAnnotationQuery)[0]
             idAnnotation=query[0][0]
             # Création relation annotation spectacle
             relation="hasAnnotation"
-            print("id annotation", idAnnotation)
             idRelation=createRelation(spectacle, relation, idAnnotation)
-            print("coco")
             # Création relation annotation concept
             idInstance=createInstance(objet)
-            print(idInstance)
             if idInstance !=0:
                 AnnotationConcept = createRelation(idAnnotation, typeRelation, idInstance)
                 response = {
                     "idAnnotation": idAnnotation,
                     "idRelation": idRelation,
-                    " AnnotationConcept": AnnotationConcept
+                    "AnnotationConcept": AnnotationConcept
                 }
             else:
                 response = {"error": "Fail to create annotation"}
@@ -52,7 +52,7 @@ def createAnnotation(request):
             # idSpectacle= request.GET.get('idSpectacle')
             D = path + "Annotation"
             try:
-                annotations = db.cypher_query("MATCH (n:owl__NamedIndividual)-[rdf_type]->(f:owl__Class) WHERE f.uri='%s' RETURN n.id" % D)[0]
+                annotations = db.cypher_query("MATCH (n:owl__NamedIndividual)-[rdf_type]->(f:owl__Class) WHERE f.uri='%s' RETURN n.commentaire" % D)[0]
                 max=len(annotations)
                 responseInstance = ""
                 for i in range(max):

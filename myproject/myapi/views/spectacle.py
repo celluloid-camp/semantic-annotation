@@ -28,9 +28,9 @@ def getFirstConcepts(request):
             decoruri = decor[0][0][0]
             resultdecor = decoruri[len(path):len(decoruri)]
             response = {
-                "decor": resultdecor,
-                "emotion":resultemotion,
-                "interpretation": resultinterpretation
+                "concept": [resultdecor,
+                resultemotion,
+                 resultinterpretation]
             }
             return JsonResponse(response, safe=False)
         except:
@@ -44,7 +44,6 @@ def getConceptSubClasses(request):
     print(c)
     if request.method == 'GET':
         uri = path+c
-        # path = len("http://www.semanticweb.org/larbim/ontologies/2022/0/Emotion-initial-version#")+c
         try:
             Conceptquery="MATCH (n:owl__Class)-[rdfs_subClassOf]->(f:owl__Class) WHERE f.uri='%s' RETURN n.uri" %uri
             result = db.cypher_query(Conceptquery)[0]
@@ -52,15 +51,14 @@ def getConceptSubClasses(request):
                 iteration = len(result)
                 resUri=result[iteration-1][0]
                 res=resUri[len(path):len(resUri)]
-                response = "'concept 0':" + "'" + res + "'"
+                lis=[]
+                lis.append(res)
                 for i in range(iteration-1):
-                    j = i + 1
-                    it = str(j)
                     resUri = result[i][0]
                     res = resUri[len(path):len(resUri)]
-                    response = response + ",'concept " + it + ":'" + res + "'"
-                response = "{" + response + "}"
-                return JsonResponse(response, safe=False)
+                    lis.append(res)
+                resp = { "concept":lis}
+                return JsonResponse(resp, safe=False)
 
             else:
                 uri=path+c
@@ -70,21 +68,25 @@ def getConceptSubClasses(request):
                 if (len(Instanceresult) != 0 and  Instanceresult[0][0]!= None ):
                     instance = Instanceresult[0][0]
                     endString = len(instance)
-                    responseInstance = "'instance 0':" + "'" + instance[len(path):endString] + "'"
                     max = len(Instanceresult)
+                    lis = []
+                    lis.append(instance[len(path):endString])
                     for i in range(max - 1):
                         j = i + 1
                         it = str(j)
                         instances = Instanceresult[j][0]
                         endString = len(instances)
                         resultInstance = instances[len(path):endString]
-                        responseInstance = responseInstance + ",'instance " + it + "':'" + resultInstance + "'"
-                    response = "{" + responseInstance + "}"
+                        lis.append(resultInstance)
+
+                    response = { "concept":lis}
                     return JsonResponse(response, safe=False)
 
                 else:
-                     response = {"Message": "No Content"}
-                     return JsonResponse(response, safe=False)
+                    lis = []
+                    lis.append(c)
+                    response =  {"concept":lis}
+                    return JsonResponse(response, safe=False)
 
 
 

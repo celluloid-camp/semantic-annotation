@@ -11,7 +11,6 @@ def createInstance(objet):
         path = Parameters.Params['Ontology_Path']
         uri= path+ objet
         type=typeOfObject(objet)
-        print("type is: ", type)
         if(type=="instance"):
             try:
                 insertQuery = "MATCH (n:owl__NamedIndividual) WHERE n.uri = '%s'CREATE (s:owl__NamedIndividual{id:apoc.create.uuid(),label:'concept'})-[r:rdf_type]->(n) RETURN s.id" % (uri)
@@ -22,7 +21,6 @@ def createInstance(objet):
                 # response = {"error": "Error occurred"}
                 return 0
         else:
-            print("iam not an instance")
             if(type=="classe"):
                 print("i am a class")
                 try:
@@ -40,11 +38,10 @@ def createInstance(objet):
 @csrf_exempt
 def createRelation(domain,relation,range):
         r=Parameters.Params['Ontology_Path']+relation
-        print(r)
         try:
                     CreateRelationQuery = "MATCH (n:owl__ObjectProperty) WHERE n.uri = '%s'CREATE (s:owl__NamedIndividual{id:apoc.create.uuid(), label:'%s'})-[r:rdf_type]->(n) RETURN s.id" % (r,relation)
                     idRelation = db.cypher_query(CreateRelationQuery)[0][0][0]
-                    print("id relation: ", idRelation)
+
                     CreateDomainQuery="MATCH (n:owl__NamedIndividual), (domain:owl__NamedIndividual) WHERE n.id = '%s' AND domain.id='%s' CREATE (n)-[r:rdfs_domain]->(domain) RETURN n"%(idRelation,domain)
                     db.cypher_query(CreateDomainQuery)
                     CreateRangeQuery="MATCH (n:owl__NamedIndividual), (range:owl__NamedIndividual) WHERE n.id = '%s' AND range.id='%s' CREATE (n)-[r:rdfs_range]->(range) RETURN n"%(idRelation,range)
@@ -70,3 +67,16 @@ def typeOfObject(concept):
         else:
             type="classe"
         return type
+
+@csrf_exempt
+def typeOfRelation(request):
+        concept = request.GET.get('concept')
+        if request.method == 'GET':
+            try:
+                relation = "has" + concept
+                response = {"relation": relation}
+                return JsonResponse(response, safe=False)
+            except:
+                response = {"error": relation}
+                return JsonResponse(response, safe=False)
+

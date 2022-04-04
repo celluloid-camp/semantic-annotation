@@ -6,6 +6,8 @@ urlpatterns = [
      path('conceptSubClass',getConceptSubClasses),
      path('spec',createSpectale),
      path('annotation',createAnnotation),
+     path('relation',typeOfRelation),
+
      # # path('annotation',getAnnotationOfSpectcale),
      # path('concept',createInstance),
      # path('relation',createRelation)
