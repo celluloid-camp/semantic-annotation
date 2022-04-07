@@ -10,6 +10,7 @@ from . import Parameters
 @csrf_exempt
 def createAnnotation(request):
     if request.method =='POST':
+        path = Parameters.Params['Ontology_Path']+"Annotation"
         json_data = json.loads(request.body)
         commentaire = json_data['commentaire']
         projectId=json_data['projectId']
@@ -21,10 +22,12 @@ def createAnnotation(request):
         spectacle = projectId
         # typeConcept=json_data['type']
         objet = json_data['objet']
+        idAnnotation=json_data['annotationId']
+        print('id annotation ', idAnnotation)
         typeRelation=json_data['relation']
         print("type de relation", typeRelation)
         try:
-            insertAnnotationQuery="MATCH (n:owl__Class) WHERE n.uri = 'http://www.semanticweb.org/larbim/ontologies/2022/0/Emotion-initial-version#Annotation' CREATE (s:owl__NamedIndividual{id:apoc.create.uuid(),projectId:'%s', userId:'%s',commentaire:'%s',startTime:'%s', stopTime:'%s', userName:'%s', label:'annotation'})-[r:rdf_type]->(n)  RETURN s.id" %(projectId,userId,commentaire,startTime,stopTime,userName)
+            insertAnnotationQuery="MATCH (n:owl__Class) WHERE n.uri = '%s' CREATE (s:owl__NamedIndividual{id:'%s',projectId:'%s', userId:'%s',commentaire:'%s',startTime:'%s', stopTime:'%s', userName:'%s', label:'annotation'})-[r:rdf_type]->(n)  RETURN s.id" %(path,idAnnotation,projectId,userId,commentaire,startTime,stopTime,userName)
             query= db.cypher_query(insertAnnotationQuery)[0]
             idAnnotation=query[0][0]
             # Création relation annotation spectacle
@@ -101,22 +104,40 @@ def createAnnotation(request):
                 response = {"error": "Error When Get Annotations of project"}
                 return JsonResponse(response, safe=False)
 
+@csrf_exempt
+def getAnnotationConcept(request):
+    path = Parameters.Params['Ontology_Path']
+    if request.method == 'GET':
+        idAnnotation= request.GET.get('idAnnotation')
+        try:
+                  relation=db.cypher_query("MATCH (n:owl__NamedIndividual)-[rdfs_domain]->(f:owl__NamedIndividual) WHERE f.id='%s' AND NOT(n.label='hasAnnotation') RETURN n.id" % (idAnnotation))[0]
+                  relation = relation[0][0]
+                  try:
+                             concept = db.cypher_query("MATCH (n:owl__NamedIndividual)-[rdfs_range]-(f:owl__NamedIndividual) WHERE f.id='%s' AND n.label='concept' RETURN n.id" % (relation))[0]
+                             concept=concept[0][0]
+                             try:
+                                 # Get the name of the concept
+                                 conceptName = db.cypher_query("MATCH (n:owl__Class)-[rdf_type]-(f:owl__NamedIndividual) WHERE f.id='%s' RETURN n.uri" % (concept))[0]
+                                 conceptName= conceptName[0][0]
+                                 conceptName=conceptName[len(path): len(conceptName)]
+                                 response = {"concept":conceptName}
+                                 return JsonResponse(response, safe=False)
+                             except:
+                                 #Its an instance
+                                 try:
+                                     conceptName = db.cypher_query("MATCH (n:Resource)-[rdf_type]-(f:owl__NamedIndividual) WHERE f.id='%s' RETURN n.uri" % (concept))[0]
+                                     conceptName = conceptName[0][0]
+                                     conceptName = conceptName[len(path): len(conceptName)]
+                                     response = {"concept":conceptName}
+                                     return JsonResponse(response, safe=False)
+                                 except:
+                                     print("ERROR GET Instance of Annotation")
 
-        # Get All Annotation of a spectacle
-# def getAnnotationOfSpectcale(request):
-#     if request.method == 'GET':
-#         path=Parameters.Params['Ontology_Path']
-#         # idSpectacle= request.GET.get('idSpectacle')
-#         D=path+"Annotation"
-#         try:
-#             annotation = db.cypher_query("MATCH(D:owl__Class) WHERE D.uri='%s' return D.uri" %D)
-#
-#             uri = annotation[0][0][0]
-#             annotation = uri[len(path):len(uri)]
-#             response = {
-#                 "annotation": annotation,
-#             }
-#             return JsonResponse(response, safe=False)
-#         except:
-#             response = {"error": "Error occurred"}
-#             return JsonResponse(response, safe=False)
+                  except:
+                            response = {"concept":conceptName}
+                            return JsonResponse(response, safe=False)
+        except:
+                 response = {"error": "Annotation Not Found"}
+                 return JsonResponse(response, safe=False)
+
+

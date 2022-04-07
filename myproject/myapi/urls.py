@@ -7,7 +7,7 @@ urlpatterns = [
      path('spec',createSpectale),
      path('annotation',createAnnotation),
      path('relation',typeOfRelation),
-
+     path('ontology',getAnnotationConcept),
      # # path('annotation',getAnnotationOfSpectcale),
      # path('concept',createInstance),
      # path('relation',createRelation)
