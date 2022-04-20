@@ -120,7 +120,19 @@ def getAnnotationConcept(request):
                                  conceptName = db.cypher_query("MATCH (n:owl__Class)-[rdf_type]-(f:owl__NamedIndividual) WHERE f.id='%s' RETURN n.uri" % (concept))[0]
                                  conceptName= conceptName[0][0]
                                  conceptName=conceptName[len(path): len(conceptName)]
-                                 response = {"concept":conceptName}
+                                 superClass = conceptName
+                                 lis = []
+                                 while (superClass != 'Emotion' and superClass != 'Decor' and superClass != 'Interpretation'):
+                                     # GET SUPER CLASS
+                                     super = getConceptTreeStructur(superClass)
+                                     superClass = super[len(path): len(super)]
+                                     print('tupe classe :', superClass)
+
+                                     lis.append(superClass)
+
+                                 response = {"concept": conceptName,
+                                             "superConcept": lis
+                                             }
                                  return JsonResponse(response, safe=False)
                              except:
                                  #Its an instance
@@ -128,7 +140,19 @@ def getAnnotationConcept(request):
                                      conceptName = db.cypher_query("MATCH (n:Resource)-[rdf_type]-(f:owl__NamedIndividual) WHERE f.id='%s' RETURN n.uri" % (concept))[0]
                                      conceptName = conceptName[0][0]
                                      conceptName = conceptName[len(path): len(conceptName)]
-                                     response = {"concept":conceptName}
+                                     superClass=conceptName
+                                     lis=[]
+                                     while (superClass != 'Emotion' and superClass != 'Decor' and superClass != 'Interpretation'):
+                                         # GET SUPER CLASS
+                                         super=getConceptTreeStructur(superClass)
+                                         superClass=super[len(path) : len(super)]
+                                         print('la super classe',superClass)
+
+                                         lis.append(superClass)
+
+                                     response = {"concept":conceptName,
+                                                 "superConcept":lis
+                                                 }
                                      return JsonResponse(response, safe=False)
                                  except:
                                      print("ERROR GET Instance of Annotation")
@@ -137,7 +161,7 @@ def getAnnotationConcept(request):
                             response = {"concept":conceptName}
                             return JsonResponse(response, safe=False)
         except:
-                 response = {"error": "Annotation Not Found"}
+                 response = {"concept": ""}
                  return JsonResponse(response, safe=False)
 
 

@@ -80,3 +80,25 @@ def typeOfRelation(request):
                 response = {"error": relation}
                 return JsonResponse(response, safe=False)
 
+@csrf_exempt
+def getConceptTreeStructur(concept):
+    if len(concept)!=0:
+        path=Parameters.Params['Ontology_Path']
+        uri=Parameters.Params['Ontology_Path']+concept
+        GetConceptQuery = "MATCH (n:owl__Class)-[rdf_type]-(f:owl__NamedIndividual) WHERE f.uri='%s' RETURN n.uri" % uri
+        result= db.cypher_query(GetConceptQuery)
+        try:
+            response = result[0][0][0]
+            return response
+        except:
+            GetConceptQuery = "MATCH (n:owl__Class)<-[rdfs_subClassOf]-(f:owl__Class) WHERE f.uri='%s' RETURN n.uri" % uri
+            result= db.cypher_query(GetConceptQuery)
+            try:
+                chaine= result[0][0][0]
+                if( chaine[0:len(Parameters.Params['Ontology_Path'])]==path):
+                        response = result[0][0][0]
+                else:
+                    response = result[0][1][0]
+                return response
+            except:
+                  return 'error'
