@@ -12,25 +12,16 @@ from . import Parameters
 ######## ***************GET main concepts******************
 def getFirstConcepts(request):
     if request.method == 'GET':
-        path=Parameters.Params['Ontology_Path']
-        D=path+'Decor'
-        E=path+'Emotion'
-        J=path+'Judgement'
-        I=path+'Interpretation'
         try:
-            decor = db.cypher_query("MATCH(D:owl__Class) WHERE D.uri='%s' return D.uri" %D)
-            emotion = db.cypher_query("MATCH(D:owl__Class) WHERE D.uri='%s' return D.uri" %E)
-            interpretation = db.cypher_query("MATCH(D:owl__Class) WHERE D.uri='%s' return D.uri" %I)
-            emotionuri=emotion[0][0][0]
-            resultemotion = emotionuri[len(path):len(emotionuri)]
-            interpretationuri = interpretation[0][0][0]
-            resultinterpretation=  interpretationuri[len(path):len( interpretationuri)]
-            decoruri = decor[0][0][0]
-            resultdecor = decoruri[len(path):len(decoruri)]
+            resultStaging='Staging'
+            resultEmotion='Emotion'
+            resultActing='Acting'
+            resultJudgement='Judgement'
+            annotationLibre='Annotation Libre'
+
             response = {
-                "concept": [resultdecor,
-                resultemotion,
-                 resultinterpretation]
+                "concept": [resultEmotion,resultStaging,
+                 resultActing,resultJudgement, annotationLibre, ]
             }
             return JsonResponse(response, safe=False)
         except:
@@ -41,17 +32,21 @@ def getFirstConcepts(request):
 def getConceptSubClasses(request):
     path = Parameters.Params['Ontology_Path']
     c = request.GET.get('concept')
-    print(c)
     if request.method == 'GET':
         uri = path+c
         try:
             Conceptquery="MATCH (n:owl__Class)-[rdfs_subClassOf]->(f:owl__Class) WHERE f.uri='%s' RETURN n.uri" %uri
             result = db.cypher_query(Conceptquery)[0]
+
+
             if(len(result)!=0):
                 iteration = len(result)
                 resUri=result[iteration-1][0]
                 res=resUri[len(path):len(resUri)]
-                lis=[]
+                if (c == "Judgement" or c == "Emotion"):
+                    lis = []
+                else:
+                    lis = ["Judgement", "Emotion"]
                 lis.append(res)
                 for i in range(iteration-1):
                     resUri = result[i][0]
@@ -65,11 +60,12 @@ def getConceptSubClasses(request):
                 #-------------------------------------------------------- Get Individuals
                 Instancequery = "MATCH (n:owl__NamedIndividual)-[rdf_type]->(f:owl__Class) WHERE f.uri='%s' RETURN n.uri" % uri
                 Instanceresult = db.cypher_query(Instancequery)[0]
+                lis = []
                 if (len(Instanceresult) != 0 and  Instanceresult[0][0]!= None ):
                     instance = Instanceresult[0][0]
                     endString = len(instance)
                     max = len(Instanceresult)
-                    lis = []
+
                     lis.append(instance[len(path):endString])
                     for i in range(max - 1):
                         j = i + 1
@@ -83,8 +79,8 @@ def getConceptSubClasses(request):
                     return JsonResponse(response, safe=False)
 
                 else:
-                    lis = []
-                    lis.append(c)
+
+                    # lis.append(c)
                     response =  {"concept":lis}
                     return JsonResponse(response, safe=False)
 

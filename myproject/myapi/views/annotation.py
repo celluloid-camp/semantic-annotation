@@ -109,12 +109,16 @@ def getAnnotationConcept(request):
     path = Parameters.Params['Ontology_Path']
     if request.method == 'GET':
         idAnnotation= request.GET.get('idAnnotation')
+        print('id annotation:', idAnnotation)
         try:
                   relation=db.cypher_query("MATCH (n:owl__NamedIndividual)-[rdfs_domain]->(f:owl__NamedIndividual) WHERE f.id='%s' AND NOT(n.label='hasAnnotation') RETURN n.id" % (idAnnotation))[0]
                   relation = relation[0][0]
+                  print('work 1')
                   try:
+                             print('id relation concept', relation)
                              concept = db.cypher_query("MATCH (n:owl__NamedIndividual)-[rdfs_range]-(f:owl__NamedIndividual) WHERE f.id='%s' AND n.label='concept' RETURN n.id" % (relation))[0]
                              concept=concept[0][0]
+                             print('work 2')
                              try:
                                  # Get the name of the concept
                                  conceptName = db.cypher_query("MATCH (n:owl__Class)-[rdf_type]-(f:owl__NamedIndividual) WHERE f.id='%s' RETURN n.uri" % (concept))[0]
@@ -122,12 +126,11 @@ def getAnnotationConcept(request):
                                  conceptName=conceptName[len(path): len(conceptName)]
                                  superClass = conceptName
                                  lis = []
-                                 while (superClass != 'Emotion' and superClass != 'Decor' and superClass != 'Interpretation'):
+                                 print('concept')
+                                 while (superClass != 'Emotion' and superClass != 'Decor' and superClass != 'Interpretation' and superClass != 'Spectacle'):
                                      # GET SUPER CLASS
                                      super = getConceptTreeStructur(superClass)
                                      superClass = super[len(path): len(super)]
-                                     print('tupe classe :', superClass)
-
                                      lis.append(superClass)
 
                                  response = {"concept": conceptName,
@@ -136,6 +139,7 @@ def getAnnotationConcept(request):
                                  return JsonResponse(response, safe=False)
                              except:
                                  #Its an instance
+                                 print('instance')
                                  try:
                                      conceptName = db.cypher_query("MATCH (n:Resource)-[rdf_type]-(f:owl__NamedIndividual) WHERE f.id='%s' RETURN n.uri" % (concept))[0]
                                      conceptName = conceptName[0][0]
@@ -146,8 +150,6 @@ def getAnnotationConcept(request):
                                          # GET SUPER CLASS
                                          super=getConceptTreeStructur(superClass)
                                          superClass=super[len(path) : len(super)]
-                                         print('la super classe',superClass)
-
                                          lis.append(superClass)
 
                                      response = {"concept":conceptName,

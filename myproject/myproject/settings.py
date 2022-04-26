@@ -85,7 +85,7 @@ WSGI_APPLICATION = 'myproject.wsgi.application'
 #     }
 # }
 
-NEOMODEL_NEO4J_BOLT_URL = os.environ.get('NEO4J_BOLT_URL','bolt://neo4j:neo4j@localhost:7687')
+NEOMODEL_NEO4J_BOLT_URL = os.environ.get('NEO4J_BOLT_URL','bolt://neo4j:neo4jneo4j@localhost:7687')
 # you are free to add this configurations
 NEOMODEL_SIGNALS = True
 NEOMODEL_FORCE_TIMEZONE = False
