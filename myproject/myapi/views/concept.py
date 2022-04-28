@@ -38,14 +38,17 @@ def createInstance(objet):
 @csrf_exempt
 def createRelation(domain,relation,range):
         r=Parameters.Params['Ontology_Path']+relation
+        print('create relation func',r)
         try:
                     CreateRelationQuery = "MATCH (n:owl__ObjectProperty) WHERE n.uri = '%s'CREATE (s:owl__NamedIndividual{id:apoc.create.uuid(), label:'%s'})-[r:rdf_type]->(n) RETURN s.id" % (r,relation)
                     idRelation = db.cypher_query(CreateRelationQuery)[0][0][0]
-
+                    print('1')
                     CreateDomainQuery="MATCH (n:owl__NamedIndividual), (domain:owl__NamedIndividual) WHERE n.id = '%s' AND domain.id='%s' CREATE (n)-[r:rdfs_domain]->(domain) RETURN n"%(idRelation,domain)
                     db.cypher_query(CreateDomainQuery)
+                    print('2')
                     CreateRangeQuery="MATCH (n:owl__NamedIndividual), (range:owl__NamedIndividual) WHERE n.id = '%s' AND range.id='%s' CREATE (n)-[r:rdfs_range]->(range) RETURN n"%(idRelation,range)
                     db.cypher_query( CreateRangeQuery)
+                    print('3')
                     return idRelation
         except:
                     return 0
@@ -102,3 +105,25 @@ def getConceptTreeStructur(concept):
                 return response
             except:
                   return 'error'
+@csrf_exempt
+def emotionOrJudgement(input):
+    case=False
+    path = Parameters.Params['Ontology_Path']
+    if(len(input)!=0):
+        try:
+                superClass = input
+                if(superClass=="Emotion" or superClass=="Judgement"):
+                    return True
+                else:
+                    while (superClass != 'Emotion' and superClass != 'Staging' and superClass != 'Acting' and superClass != 'Spectacle' and superClass != 'Dramaturgy' and superClass != 'Judgement' and case == False):
+                        # GET SUPER CLASS
+                        super = getConceptTreeStructur(superClass)
+                        superClass = super[len(path): len(super)]
+                        if (superClass == 'Emotion' or superClass == 'Judgement'):
+                            case = True
+                    return case
+        except:
+            return "Error"
+
+    else:
+        return case

@@ -6,6 +6,7 @@ import json
 from numpy import *
 
 from . import Parameters
+from .concept import *
 
 
 @csrf_exempt
@@ -17,11 +18,12 @@ def getFirstConcepts(request):
             resultEmotion='Emotion'
             resultActing='Acting'
             resultJudgement='Judgement'
+            resultDramaturgy = 'Dramaturgy'
             annotationLibre='Annotation Libre'
 
             response = {
                 "concept": [resultEmotion,resultStaging,
-                 resultActing,resultJudgement, annotationLibre, ]
+                 resultActing,resultDramaturgy,resultJudgement, annotationLibre ]
             }
             return JsonResponse(response, safe=False)
         except:
@@ -37,13 +39,15 @@ def getConceptSubClasses(request):
         try:
             Conceptquery="MATCH (n:owl__Class)-[rdfs_subClassOf]->(f:owl__Class) WHERE f.uri='%s' RETURN n.uri" %uri
             result = db.cypher_query(Conceptquery)[0]
-
-
+            print(result)
             if(len(result)!=0):
                 iteration = len(result)
                 resUri=result[iteration-1][0]
                 res=resUri[len(path):len(resUri)]
-                if (c == "Judgement" or c == "Emotion"):
+                 # check if concept is Emotion or Judgement or subClass of it: boolen case= EmotionOrJudgement(c) , return true is its the case, else :false
+                case=emotionOrJudgement(c)
+                print("resultat de case", case, c)
+                if(case==True):
                     lis = []
                 else:
                     lis = ["Judgement", "Emotion"]
@@ -60,28 +64,38 @@ def getConceptSubClasses(request):
                 #-------------------------------------------------------- Get Individuals
                 Instancequery = "MATCH (n:owl__NamedIndividual)-[rdf_type]->(f:owl__Class) WHERE f.uri='%s' RETURN n.uri" % uri
                 Instanceresult = db.cypher_query(Instancequery)[0]
-                lis = []
+                case = emotionOrJudgement(c)
+                if (case == True):
+                    lis = []
+                else:
+                    lis = ["Judgement", "Emotion"]
                 if (len(Instanceresult) != 0 and  Instanceresult[0][0]!= None ):
                     instance = Instanceresult[0][0]
-                    endString = len(instance)
-                    max = len(Instanceresult)
+                    if(instance!=None):
+                        endString = len(instance)
+                        max = len(Instanceresult)
 
-                    lis.append(instance[len(path):endString])
-                    for i in range(max - 1):
-                        j = i + 1
-                        it = str(j)
-                        instances = Instanceresult[j][0]
-                        endString = len(instances)
-                        resultInstance = instances[len(path):endString]
-                        lis.append(resultInstance)
-
+                        lis.append(instance[len(path):endString])
+                        for i in range(max - 1):
+                            j = i + 1
+                            it = str(j)
+                            instances = Instanceresult[j][0]
+                            endString = len(instances)
+                            resultInstance = instances[len(path):endString]
+                            lis.append(resultInstance)
                     response = { "concept":lis}
                     return JsonResponse(response, safe=False)
 
                 else:
-
-                    # lis.append(c)
-                    response =  {"concept":lis}
+                    j = 0
+                    while (j < len(Instanceresult)):
+                        res = Instanceresult[j]
+                        if (res[0] != None):
+                            endString = len(res[0])
+                            resultInstance = res[0][len(path):endString]
+                            lis.append( resultInstance)
+                        j = j + 1
+                    response = {"concept":lis}
                     return JsonResponse(response, safe=False)
 
 
