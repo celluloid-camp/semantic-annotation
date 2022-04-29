@@ -7,13 +7,14 @@ from . import Parameters
 
 
 @csrf_exempt
-def createInstance(objet):
+def createInstance(objet,label):
         path = Parameters.Params['Ontology_Path']
         uri= path+ objet
         type=typeOfObject(objet)
+        print('labeeel',label)
         if(type=="instance"):
             try:
-                insertQuery = "MATCH (n:owl__NamedIndividual) WHERE n.uri = '%s'CREATE (s:owl__NamedIndividual{id:apoc.create.uuid(),label:'concept'})-[r:rdf_type]->(n) RETURN s.id" % (uri)
+                insertQuery = "MATCH (n:owl__NamedIndividual) WHERE n.uri = '%s'CREATE (s:owl__NamedIndividual{id:apoc.create.uuid(),label:'%s'})-[r:rdf_type]->(n) RETURN s.id" % (uri,label)
                 query = db.cypher_query(insertQuery)[0]
                 idInstance= query[0][0]
                 return idInstance
@@ -22,9 +23,8 @@ def createInstance(objet):
                 return 0
         else:
             if(type=="classe"):
-                print("i am a class")
                 try:
-                    insertQuery = "MATCH (n:owl__Class) WHERE n.uri = '%s' CREATE (s:owl__NamedIndividual{id:apoc.create.uuid(), label:'concept'})-[r:rdf_type]->(n) RETURN s.id" % (uri)
+                    insertQuery = "MATCH (n:owl__Class) WHERE n.uri = '%s' CREATE (s:owl__NamedIndividual{id:apoc.create.uuid(), label:'%s'})-[r:rdf_type]->(n) RETURN s.id" % (uri,label)
                     query = db.cypher_query(insertQuery)[0]
                     idInstance= query[0][0]
                     return idInstance
@@ -32,7 +32,6 @@ def createInstance(objet):
                     # response = {"error": "Error occurred"}
                     return 0
             else:
-                print("am not a class")
                 return 0
 #------------------------------------------- Creer une relation de type "relation" ayant un domaine et un range-------------------------------------------
 @csrf_exempt
@@ -42,13 +41,10 @@ def createRelation(domain,relation,range):
         try:
                     CreateRelationQuery = "MATCH (n:owl__ObjectProperty) WHERE n.uri = '%s'CREATE (s:owl__NamedIndividual{id:apoc.create.uuid(), label:'%s'})-[r:rdf_type]->(n) RETURN s.id" % (r,relation)
                     idRelation = db.cypher_query(CreateRelationQuery)[0][0][0]
-                    print('1')
                     CreateDomainQuery="MATCH (n:owl__NamedIndividual), (domain:owl__NamedIndividual) WHERE n.id = '%s' AND domain.id='%s' CREATE (n)-[r:rdfs_domain]->(domain) RETURN n"%(idRelation,domain)
                     db.cypher_query(CreateDomainQuery)
-                    print('2')
                     CreateRangeQuery="MATCH (n:owl__NamedIndividual), (range:owl__NamedIndividual) WHERE n.id = '%s' AND range.id='%s' CREATE (n)-[r:rdfs_range]->(range) RETURN n"%(idRelation,range)
                     db.cypher_query( CreateRangeQuery)
-                    print('3')
                     return idRelation
         except:
                     return 0
