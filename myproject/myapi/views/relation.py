@@ -27,3 +27,7 @@ def getEmotionRelation(objet):
             return "feelsForActing"
         else:
             return None
+@csrf_exempt
+def ColorRelation(): return "hasColor"
+@csrf_exempt
+def StagingTypesRelation(): return "hasStagingType"

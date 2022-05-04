@@ -33,6 +33,7 @@ def getFirstConcepts(request):
 ######## ***************GET Subclasses of a Concept and Instances******************
 def getConceptSubClasses(request):
     path = Parameters.Params['Ontology_Path']
+    luminaryList= Parameters.Params['luminaryList']
     c = request.GET.get('concept')
     if request.method == 'GET':
         uri = path+c
@@ -46,12 +47,15 @@ def getConceptSubClasses(request):
                 res=resUri[len(path):len(resUri)]
                  # check if concept is Emotion or Judgement or subClass of it: boolen case= EmotionOrJudgement(c) , return true is its the case, else :false
                 case=emotionOrJudgement(c)
-                print("resultat de case", case, c)
                 if(case==True):
                     lis = []
                 else:
                     lis = ["Judgement", "Emotion"]
                 lis.append(res)
+                # check if concept is Staging to append staging types
+                if(isStaging(c)):
+                    lis.append("StagingTypes")
+                if (c in luminaryList): lis.append("Color")
                 for i in range(iteration-1):
                     resUri = result[i][0]
                     res = resUri[len(path):len(resUri)]
@@ -69,6 +73,9 @@ def getConceptSubClasses(request):
                     lis = []
                 else:
                     lis = ["Judgement", "Emotion"]
+                if (isStaging(c)):
+                    lis.append("StagingTypes")
+                if(c in luminaryList): lis.append("Color")
                 if (len(Instanceresult) != 0 and  Instanceresult[0][0]!= None ):
                     instance = Instanceresult[0][0]
                     if(instance!=None):
@@ -83,7 +90,7 @@ def getConceptSubClasses(request):
                             endString = len(instances)
                             resultInstance = instances[len(path):endString]
                             lis.append(resultInstance)
-                    response = { "concept":lis}
+                    response = {"concept":lis}
                     return JsonResponse(response, safe=False)
 
                 else:

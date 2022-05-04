@@ -11,6 +11,9 @@ def createAnnotation(request):
     if request.method =='POST':
         Emotion=False
         Judgement=False
+        Color=False
+        StagingTypes=False
+
         path = Parameters.Params['Ontology_Path']+"Annotation"
         json_data = json.loads(request.body)
         commentaire = json_data['commentaire']
@@ -32,16 +35,25 @@ def createAnnotation(request):
                     # traitement different
                     obj=objet[judgementIndex-1]
                     Judgement=True
-                    print("index of judgement", judgementIndex)
+                    print("jugment est vrai", Judgement)
             if ("Emotion" in objet):
                 EmotionIndex = objet.index(("Emotion"))
                 if (EmotionIndex != 0):
                     # traitement different
                     obj = objet[EmotionIndex - 1]
                     Emotion=True
-                    print("index of emotion", EmotionIndex)
-
-        print("type de relation", typeRelation, idAnnotation)
+            if ("Color" in objet):
+                ColorIndex = objet.index(("Color"))
+                if (ColorIndex != 0):
+                    # traitement different
+                    obj = objet[ColorIndex - 1]
+                    Color = True
+            if ("StagingTypes" in objet):
+                StagingTypesIndex = objet.index(("StagingTypes"))
+                if (StagingTypesIndex != 0):
+                    # traitement different
+                    obj = objet[StagingTypesIndex - 1]
+                    StagingTypes = True
         try:
             insertAnnotationQuery="MATCH (n:owl__Class) WHERE n.uri = '%s' CREATE (s:owl__NamedIndividual{id:'%s',projectId:'%s', userId:'%s',commentaire:'%s',startTime:'%s', stopTime:'%s', userName:'%s', label:'annotation'})-[r:rdf_type]->(n)  RETURN s.id" %(path,idAnnotation,projectId,userId,commentaire,startTime,stopTime,userName)
             query= db.cypher_query(insertAnnotationQuery)[0]
@@ -50,22 +62,26 @@ def createAnnotation(request):
             relation="hasAnnotation"
             # We got to check if a spectacle exist or not, if its not the case create one
             idRelation=createRelation(spectacle, relation, idAnnotation)
-            print('id relation crée',idRelation)
             # Création relation annotation concept
             idInstance=createInstance(obj,'concept')
             if idInstance !=0:
                 AnnotationConcept = createRelation(idAnnotation, typeRelation, idInstance)
-                print('id annotation-concept',AnnotationConcept)
-                if(Judgement==True or Emotion==True):
+                if(Judgement==True or Emotion==True or Color==True or StagingTypes==True):
                     # create jugement or emotion relation:
-                    judgementPath=objet[len(objet)-1]
-                    idJudgementInstance = createInstance(judgementPath,judgementPath)
-                    judgementRelation = getJudgementRelation(objet[0])
-                    if(Emotion==True):
-                        judgementRelation = getEmotionRelation(objet[0])
-                    if(judgementRelation!= None):
+                    relationPath=objet[len(objet)-1]
+                    idRelationInstance = createInstance(relationPath,relationPath)
+                    Relation = getJudgementRelation(objet[0])
+                    if (Emotion == True):
+                        Relation = getEmotionRelation(objet[0])
+                    if (Color == True):
+                        Relation = ColorRelation()
+                    if (StagingTypes == True):
+                        Relation = StagingTypesRelation()
+                    if(Relation!= None):
                         # get id of the created concept
-                        createRelation(idJudgementInstance, judgementRelation, idInstance)
+                        print("relation nest pas vide", Relation)
+                        print("creation jugment",idRelationInstance, Relation, idInstance)
+                        createRelation(idRelationInstance, Relation, idInstance)
 
                 response = {
                     "idAnnotation": idAnnotation,
@@ -132,18 +148,17 @@ def createAnnotation(request):
 @csrf_exempt
 def getAnnotationConcept(request):
     path = Parameters.Params['Ontology_Path']
+    relConcept = ''
     if request.method == 'GET':
         idAnnotation= request.GET.get('idAnnotation')
-        # print('id annotation:', idAnnotation)
+        print('id annotation:', idAnnotation)
         try:
                   resRelation=db.cypher_query("MATCH (n:owl__NamedIndividual)-[rdfs_domain]->(f:owl__NamedIndividual) WHERE f.id='%s' AND NOT(n.label='hasAnnotation') RETURN n.id,n.label" % (idAnnotation))[0]
                   relation = resRelation[0][0]
                   labelRelation=resRelation[0][1]
-                  print('label 1',labelRelation)
                   try:
                              concept = db.cypher_query("MATCH (n:owl__NamedIndividual)-[rdfs_range]-(f:owl__NamedIndividual) WHERE f.id='%s' AND n.label='concept' RETURN n.id" % (relation))[0]
                              concept=concept[0][0]
-                             print("id du concept;", concept)
                              try:
                                  # Get the name of the concept
                                  conceptName = db.cypher_query("MATCH (n:owl__Class)-[rdf_type]-(f:owl__NamedIndividual) WHERE f.id='%s' RETURN n.uri" % (concept))[0]
@@ -162,13 +177,8 @@ def getAnnotationConcept(request):
                                              "relationConcept": ""
                                              }
                                  try:
-                                     print('dkhlna')
-                                     resQuery = db.cypher_query("MATCH (n:owl__NamedIndividual)-[rdfs_domain]-(f:owl__NamedIndividual) WHERE f.id='%s' and not (n.label='%s') RETURN n" % (concept,labelRelation))[0]
-                                     rel = resQuery[0][0]
-                                     relString=str(rel)
-                                     index= relString.find("'id'")
-                                     id=relString[index+7:len(relString)-3]
-                                     # get the instance
+                                     resQuery = db.cypher_query("MATCH (n:owl__NamedIndividual)-[rdfs_domain]-(f:owl__NamedIndividual) WHERE f.id='%s' and not (n.label='%s') RETURN n.id" % (concept,labelRelation))[0]
+                                     id = resQuery[0][0]
                                      resQuery = db.cypher_query("MATCH (n:owl__NamedIndividual)-[rdfs_domain]-(f:owl__NamedIndividual) WHERE f.id='%s'RETURN n.label" % (id))[0]
                                      relConcept = resQuery[len(resQuery)-1][0]
                                      response = {"concept": conceptName,
@@ -191,22 +201,28 @@ def getAnnotationConcept(request):
                                          super=getConceptTreeStructur(superClass)
                                          superClass=super[len(path) : len(super)]
                                          lis.append(superClass)
+                                     try:
+                                         resQuery = db.cypher_query( "MATCH (n:owl__NamedIndividual)-[rdfs_domain]-(f:owl__NamedIndividual) WHERE f.id='%s' and not (n.label='%s') RETURN n.id" % ( concept, labelRelation))[0]
+                                         id = resQuery[0][0]
+                                         resQuery = db.cypher_query("MATCH (n:owl__NamedIndividual)-[rdfs_domain]-(f:owl__NamedIndividual) WHERE f.id='%s'RETURN n.label" % (id))[0]
+                                         relConcept = resQuery[len(resQuery) - 1][0]
 
-                                     response = {"concept":conceptName,
-                                                 "superConcept":lis,
-                                                 "relationConcept": ""
-                                                 }
-                                     return JsonResponse(response, safe=False)
+                                     except:
+                                         response = {"concept":conceptName,
+                                                     "superConcept":lis,
+                                                     "relationConcept": relConcept
+                                                     }
+                                         return JsonResponse(response, safe=False)
                                  except:
                                      print("ERROR GET Instance of Annotation")
 
 
 
                   except:
-                            response = {"concept":conceptName}
+                            response = {"concept":conceptName, "superConcept":"", "relationConcept": ""}
                             return JsonResponse(response, safe=False)
         except:
-                 response = {"concept": ""}
+                 response = {"concept": "","superConcept":"", "relationConcept": ""}
                  return JsonResponse(response, safe=False)
 
 

@@ -123,3 +123,39 @@ def emotionOrJudgement(input):
 
     else:
         return case
+@csrf_exempt
+def isStaging(concept):
+    staging=False
+    path=Parameters.Params['Ontology_Path']
+    uri=path+ concept
+    superClasses=Parameters.Params['superClasses']
+    if(concept!= None):
+        GetConceptQuery = "MATCH (n:owl__Class)-[rdf_type]-(f:owl__NamedIndividual) WHERE f.uri='%s' RETURN n.uri" % uri
+        result = db.cypher_query(GetConceptQuery)
+        try:
+            response = result[0][0][0]
+        except:
+            GetConceptQuery = "MATCH (n:owl__Class)<-[rdfs_subClassOf]-(f:owl__Class) WHERE f.uri='%s' RETURN n.uri" % uri
+            result = db.cypher_query(GetConceptQuery)
+            try:
+                chaine = result[0][0][0]
+                if (chaine[0:len(Parameters.Params['Ontology_Path'])] == path):
+                    response = result[0][0][0]
+                else:
+                    response = result[0][1][0]
+            except:
+                response=None
+        finally:
+            if(response):
+                conceptName = response
+                conceptName = conceptName[len(path): len(conceptName)]
+                superClass = conceptName
+                if(superClass =="Staging" or concept=="Staging"): staging=True
+                while (superClass not in superClasses and staging==False):
+                    # GET SUPER CLASS
+                    super = getConceptTreeStructur(superClass)
+                    superClass = super[len(path): len(super)]
+                    if(superClass=='Staging'):
+                        staging= True
+            return staging
+
