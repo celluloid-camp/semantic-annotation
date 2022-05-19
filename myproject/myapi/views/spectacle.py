@@ -34,6 +34,7 @@ def getFirstConcepts(request):
 def getConceptSubClasses(request):
     path = Parameters.Params['Ontology_Path']
     luminaryList= Parameters.Params['luminaryList']
+    suitList= Parameters.Params['suitList']
     c = request.GET.get('concept')
     if request.method == 'GET':
         uri = path+c
@@ -56,6 +57,7 @@ def getConceptSubClasses(request):
                 if(isStaging(c)):
                     lis.append("StagingTypes")
                 if (c in luminaryList): lis.append("Color")
+                if (c in suitList): lis.append("Color")
                 for i in range(iteration-1):
                     resUri = result[i][0]
                     res = resUri[len(path):len(resUri)]

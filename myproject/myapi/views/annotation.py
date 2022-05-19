@@ -13,7 +13,6 @@ def createAnnotation(request):
         Judgement=False
         Color=False
         StagingTypes=False
-
         path = Parameters.Params['Ontology_Path']+"Annotation"
         json_data = json.loads(request.body)
         commentaire = json_data['commentaire']
@@ -24,9 +23,11 @@ def createAnnotation(request):
         userName=json_data['userName']
         spectacle = projectId
         objet = json_data['objet']
+        print('objet reçu est ', objet)
         idAnnotation=json_data['annotationId']
         # print('id annotation ', idAnnotation)
         typeRelation=json_data['relation']
+
         if(len(objet)!=0):
             obj=objet[len(objet)-1]
             if("Judgement" in objet):
@@ -62,13 +63,17 @@ def createAnnotation(request):
             relation="hasAnnotation"
             # We got to check if a spectacle exist or not, if its not the case create one
             idRelation=createRelation(spectacle, relation, idAnnotation)
+
             # Création relation annotation concept
+            print('objet a créer est ', obj)
             idInstance=createInstance(obj,'concept')
             if idInstance !=0:
+                print("qoqov",Judgement)
                 AnnotationConcept = createRelation(idAnnotation, typeRelation, idInstance)
                 if(Judgement==True or Emotion==True or Color==True or StagingTypes==True):
                     # create jugement or emotion relation:
                     relationPath=objet[len(objet)-1]
+                    print('objet 1.',relationPath)
                     idRelationInstance = createInstance(relationPath,relationPath)
                     Relation = getJudgementRelation(objet[0])
                     if (Emotion == True):
@@ -144,7 +149,11 @@ def createAnnotation(request):
             except:
                 response = {"error": "Error When Get Annotations of project"}
                 return JsonResponse(response, safe=False)
-
+    if (request.method == 'DELETE'):
+        idAnnotation = request.GET.get('idAnnotation')
+        print('delete id annotation', idAnnotation)
+        response=""
+        return JsonResponse(response, safe=False)
 @csrf_exempt
 def getAnnotationConcept(request):
     path = Parameters.Params['Ontology_Path']
@@ -156,6 +165,7 @@ def getAnnotationConcept(request):
                   resRelation=db.cypher_query("MATCH (n:owl__NamedIndividual)-[rdfs_domain]->(f:owl__NamedIndividual) WHERE f.id='%s' AND NOT(n.label='hasAnnotation') RETURN n.id,n.label" % (idAnnotation))[0]
                   relation = resRelation[0][0]
                   labelRelation=resRelation[0][1]
+                  print("label: ",labelRelation)
                   try:
                              concept = db.cypher_query("MATCH (n:owl__NamedIndividual)-[rdfs_range]-(f:owl__NamedIndividual) WHERE f.id='%s' AND n.label='concept' RETURN n.id" % (relation))[0]
                              concept=concept[0][0]
@@ -180,7 +190,9 @@ def getAnnotationConcept(request):
                                      resQuery = db.cypher_query("MATCH (n:owl__NamedIndividual)-[rdfs_domain]-(f:owl__NamedIndividual) WHERE f.id='%s' and not (n.label='%s') RETURN n.id" % (concept,labelRelation))[0]
                                      id = resQuery[0][0]
                                      resQuery = db.cypher_query("MATCH (n:owl__NamedIndividual)-[rdfs_domain]-(f:owl__NamedIndividual) WHERE f.id='%s'RETURN n.label" % (id))[0]
+                                     print("ress",resQuery)
                                      relConcept = resQuery[len(resQuery)-1][0]
+                                     relConcept =getAllTree(relConcept)
                                      response = {"concept": conceptName,
                                                  "superConcept": lis,
                                                  "relationConcept":relConcept
@@ -195,6 +207,7 @@ def getAnnotationConcept(request):
                                      conceptName = conceptName[0][0]
                                      conceptName = conceptName[len(path): len(conceptName)]
                                      superClass=conceptName
+                                     print("super Class ", superClass)
                                      lis=[]
                                      while (superClass != 'Emotion' and superClass != 'Staging' and superClass != 'Acting' and superClass != 'Dramaturgy' and superClass != 'Judgement'  and superClass != 'Spectacle'):
                                          # GET SUPER CLASS
@@ -204,10 +217,17 @@ def getAnnotationConcept(request):
                                      try:
                                          resQuery = db.cypher_query( "MATCH (n:owl__NamedIndividual)-[rdfs_domain]-(f:owl__NamedIndividual) WHERE f.id='%s' and not (n.label='%s') RETURN n.id" % ( concept, labelRelation))[0]
                                          id = resQuery[0][0]
+                                         print("id: ", id)
                                          resQuery = db.cypher_query("MATCH (n:owl__NamedIndividual)-[rdfs_domain]-(f:owl__NamedIndividual) WHERE f.id='%s'RETURN n.label" % (id))[0]
                                          relConcept = resQuery[len(resQuery) - 1][0]
-
+                                         relConcept  = getAllTree(relConcept)
+                                         response = {"concept": conceptName,
+                                                     "superConcept": lis,
+                                                     "relationConcept": relConcept
+                                                     }
+                                         return JsonResponse(response, safe=False)
                                      except:
+                                         relConcept = getAllTree(relConcept)
                                          response = {"concept":conceptName,
                                                      "superConcept":lis,
                                                      "relationConcept": relConcept
@@ -215,9 +235,6 @@ def getAnnotationConcept(request):
                                          return JsonResponse(response, safe=False)
                                  except:
                                      print("ERROR GET Instance of Annotation")
-
-
-
                   except:
                             response = {"concept":conceptName, "superConcept":"", "relationConcept": ""}
                             return JsonResponse(response, safe=False)
@@ -225,4 +242,8 @@ def getAnnotationConcept(request):
                  response = {"concept": "","superConcept":"", "relationConcept": ""}
                  return JsonResponse(response, safe=False)
 
-
+@csrf_exempt
+def deleteAnnotation(request):
+    if(request.method=='DELETE'):
+        idAnnotation= request.GET.get('idAnnotation')
+        print('delete id annotation',idAnnotation)

@@ -78,7 +78,19 @@ def typeOfRelation(request):
             except:
                 response = {"error": relation}
                 return JsonResponse(response, safe=False)
-
+@csrf_exempt
+def getAllTree(concept):
+    if(concept!= None and len(concept)!= 0):
+        Super= Parameters.Params['superClasses']
+        print("concept affiché:", concept)
+        list=[]
+        list.append(concept)
+        while(concept not in Super):
+            concept=getConceptTreeStructur(concept)
+            concept= concept[len(Parameters.Params['Ontology_Path']): len(concept)]
+            print("concept affiché:", concept)
+            list.append(concept)
+        return list
 @csrf_exempt
 def getConceptTreeStructur(concept):
     if len(concept)!=0:
@@ -100,7 +112,7 @@ def getConceptTreeStructur(concept):
                     response = result[0][1][0]
                 return response
             except:
-                  return 'error'
+                  return concept
 @csrf_exempt
 def emotionOrJudgement(input):
     case=False
