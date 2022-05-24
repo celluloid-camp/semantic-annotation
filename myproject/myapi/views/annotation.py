@@ -68,7 +68,6 @@ def createAnnotation(request):
             print('objet a créer est ', obj)
             idInstance=createInstance(obj,'concept')
             if idInstance !=0:
-                print("qoqov",Judgement)
                 AnnotationConcept = createRelation(idAnnotation, typeRelation, idInstance)
                 if(Judgement==True or Emotion==True or Color==True or StagingTypes==True):
                     # create jugement or emotion relation:
@@ -157,6 +156,7 @@ def createAnnotation(request):
 @csrf_exempt
 def getAnnotationConcept(request):
     path = Parameters.Params['Ontology_Path']
+    Super = Parameters.Params['superClasses']
     relConcept = ''
     if request.method == 'GET':
         idAnnotation= request.GET.get('idAnnotation')
@@ -176,7 +176,7 @@ def getAnnotationConcept(request):
                                  conceptName=conceptName[len(path): len(conceptName)]
                                  superClass = conceptName
                                  lis = []
-                                 while (superClass != 'Emotion' and superClass != 'Staging' and superClass != 'Acting' and superClass != 'Dramaturgy' and superClass != 'Judgement'  and superClass != 'Spectacle'):
+                                 while (superClass not in super):
                                      # GET SUPER CLASS
                                      super = getConceptTreeStructur(superClass)
                                      superClass = super[len(path): len(super)]
