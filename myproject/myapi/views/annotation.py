@@ -15,6 +15,7 @@ def createAnnotation(request):
         StagingTypes=False
         path = Parameters.Params['Ontology_Path']+"Annotation"
         json_data = json.loads(request.body)
+        print('resultat', json_data)
         commentaire = json_data['commentaire']
         projectId=json_data['projectId']
         userId=json_data['userId']
@@ -97,7 +98,7 @@ def createAnnotation(request):
 
             return JsonResponse(response, safe=False)
         except:
-            response = {"error": "Error occurred"}
+            response = {"annotation créee": idAnnotation}
             return JsonResponse(response, safe=False)
    # ************************** # Get annotation of spectacle
     if request.method == 'GET':
