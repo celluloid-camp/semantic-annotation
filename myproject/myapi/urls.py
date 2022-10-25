@@ -2,19 +2,11 @@
 from .views import *
 from django.urls import path
 urlpatterns = [
-     path('concept',getFirstConcepts),
-     path('conceptSubClass',getConceptSubClasses),
-     path('spec',createSpectale),
-     path('annotation',createAnnotation),
-     path('relation',typeOfRelation),
-     path('ontology',getAnnotationConcept),
-     # # path('annotation',getAnnotationOfSpectcale),
-     # path('concept',createInstance),
-     # path('relation',createRelation)
+     path('concept',getFirstConcepts), ##GET Annotation branches
+     path('conceptSubClass',getConceptSubClasses),  ##GET concept compoenents and relations
+     path('spec',createSpectale), ##Create specatcle
+     path('annotation',createAnnotation),##Create and Get Annotation
+     path('relation',typeOfRelation), ##Return type of relation
+     path('ontology',getAnnotationConcept), ##Get concepts of annotation
 
-     # path('getAllPersons',getAllPersons),
-     # path('city',cityDetails),
-     # path('getAllCities',getAllCities),
-     # path('connectPaC',connectPaC),
-     # path('connectPaP',connectPaP)
  ]

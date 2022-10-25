@@ -82,13 +82,13 @@ def typeOfRelation(request):
 def getAllTree(concept):
     if(concept!= None and len(concept)!= 0):
         Super= Parameters.Params['superClasses']
-        print("concept affiché:", concept)
+        print("concept affiché 1:", concept)
         list=[]
         list.append(concept)
         while(concept not in Super):
             concept=getConceptTreeStructur(concept)
             concept= concept[len(Parameters.Params['Ontology_Path']): len(concept)]
-            print("concept affiché:", concept)
+            print("concept affiché 2:", concept)
             list.append(concept)
         return list
 @csrf_exempt

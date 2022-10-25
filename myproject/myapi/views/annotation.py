@@ -102,53 +102,63 @@ def createAnnotation(request):
             return JsonResponse(response, safe=False)
    # ************************** # Get annotation of spectacle
     if request.method == 'GET':
-            path = Parameters.Params['Ontology_Path']
-            idProject= request.GET.get('idProject')
-            D = path + "Annotation"
-            try:
-                annotations = db.cypher_query("MATCH (n:owl__NamedIndividual)-[rdf_type]->(f:owl__Class) WHERE f.uri='%s' AND n.projectId='%s' RETURN n.id, n.commentaire" % (D,idProject))[0]
-                max=len(annotations)
-                lis = []
-                for i in range(max):
-                    instanceId = annotations[i][0]
-                    commentaire= annotations[i][1]
-                    # Pour chaque annotation get la relation au quelle elle est rattachée
+        path = Parameters.Params['Ontology_Path']
+        idProject = request.GET.get('idProject')
+        D = path + "Annotation"
+        try:
+            annotations = db.cypher_query(
+                "MATCH (n:owl__NamedIndividual)-[rdf_type]->(f:owl__Class) WHERE f.uri='%s' AND n.projectId='%s' RETURN n.id, n.commentaire" % (
+                D, idProject))[0]
+            max = len(annotations)
+            lis = []
+            for i in range(max):
+                instanceId = annotations[i][0]
+                commentaire = annotations[i][1]
+                # Pour chaque annotation get la relation au quelle elle est rattachée
+                try:
+                    relation = db.cypher_query(
+                        "MATCH (n:owl__NamedIndividual)-[rdfs_domain]->(f:owl__NamedIndividual) WHERE f.id='%s' AND NOT(n.label='hasAnnotation') RETURN n.id" % (
+                            instanceId))[0]
+                    relation = relation[0][0]
                     try:
-                         relation=db.cypher_query("MATCH (n:owl__NamedIndividual)-[rdfs_domain]->(f:owl__NamedIndividual) WHERE f.id='%s' AND NOT(n.label='hasAnnotation') RETURN n.id" % (instanceId))[0]
-                         relation = relation[0][0]
-                         try:
-                             concept = db.cypher_query("MATCH (n:owl__NamedIndividual)-[rdfs_range]-(f:owl__NamedIndividual) WHERE f.id='%s' AND n.label='concept' RETURN n.id" % (relation))[0]
-                             concept=concept[0][0]
-                             try:
-                                 # Get the name of the concept
-                                 conceptName = db.cypher_query("MATCH (n:owl__Class)-[rdf_type]-(f:owl__NamedIndividual) WHERE f.id='%s' RETURN n.uri" % (concept))[0]
-                                 conceptName= conceptName[0][0]
-                                 conceptName=conceptName[len(path): len(conceptName)]
-                                 data = {"id": instanceId, "commentaire": commentaire,"concept":conceptName}
-                                 lis.append(data)
-                             except:
-                                 #Its an instance
-                                 try:
-                                     conceptName = db.cypher_query("MATCH (n:Resource)-[rdf_type]-(f:owl__NamedIndividual) WHERE f.id='%s' RETURN n.uri" % (concept))[0]
-                                     conceptName = conceptName[0][0]
-                                     conceptName = conceptName[len(path): len(conceptName)]
-                                     data = {"id": instanceId, "commentaire": commentaire,"concept": conceptName}
-                                     lis.append(data)
-                                 except:
-                                     print("ERROR GET Instance of Annotation")
+                        concept = db.cypher_query(
+                            "MATCH (n:owl__NamedIndividual)-[rdfs_range]-(f:owl__NamedIndividual) WHERE f.id='%s' AND n.label='concept' RETURN n.id" % (
+                                relation))[0]
+                        concept = concept[0][0]
+                        try:
+                            # Get the name of the concept
+                            conceptName = db.cypher_query(
+                                "MATCH (n:owl__Class)-[rdf_type]-(f:owl__NamedIndividual) WHERE f.id='%s' RETURN n.uri" % (
+                                    concept))[0]
+                            conceptName = conceptName[0][0]
+                            conceptName = conceptName[len(path): len(conceptName)]
+                            data = {"id": instanceId, "commentaire": commentaire, "concept": conceptName}
+                            lis.append(data)
+                        except:
+                            # Its an instance
+                            try:
+                                conceptName = db.cypher_query(
+                                    "MATCH (n:Resource)-[rdf_type]-(f:owl__NamedIndividual) WHERE f.id='%s' RETURN n.uri" % (
+                                        concept))[0]
+                                conceptName = conceptName[0][0]
+                                conceptName = conceptName[len(path): len(conceptName)]
+                                data = {"id": instanceId, "commentaire": commentaire, "concept": conceptName}
+                                lis.append(data)
+                            except:
+                                print("ERROR GET Instance of Annotation")
 
-                         except:
-                             data = {"id": instanceId, "commentaire": commentaire,"concept":""}
-                             lis.append(data)
                     except:
-                        # Annotation sans relation | elle doit etre un commentaire libre
-                        data = {"id": instanceId, "commentaire": commentaire,"concept":""}
+                        data = {"id": instanceId, "commentaire": commentaire, "concept": ""}
                         lis.append(data)
-                response = {"annotation": lis}
-                return JsonResponse(response, safe=False)
-            except:
-                response = {"error": "Error When Get Annotations of project"}
-                return JsonResponse(response, safe=False)
+                except:
+                    # Annotation sans relation | elle doit etre un commentaire libre
+                    data = {"id": instanceId, "commentaire": commentaire, "concept": ""}
+                    lis.append(data)
+            response = {"annotation": lis}
+            return JsonResponse(response, safe=False)
+        except:
+            response = {"error": "Error When Get Annotations of project"}
+            return JsonResponse(response, safe=False)
     if (request.method == 'DELETE'):
         idAnnotation = request.GET.get('idAnnotation')
         print('delete id annotation', idAnnotation)
@@ -218,7 +228,6 @@ def getAnnotationConcept(request):
                                      try:
                                          resQuery = db.cypher_query( "MATCH (n:owl__NamedIndividual)-[rdfs_domain]-(f:owl__NamedIndividual) WHERE f.id='%s' and not (n.label='%s') RETURN n.id" % ( concept, labelRelation))[0]
                                          id = resQuery[0][0]
-                                         print("id: ", id)
                                          resQuery = db.cypher_query("MATCH (n:owl__NamedIndividual)-[rdfs_domain]-(f:owl__NamedIndividual) WHERE f.id='%s'RETURN n.label" % (id))[0]
                                          relConcept = resQuery[len(resQuery) - 1][0]
                                          relConcept  = getAllTree(relConcept)

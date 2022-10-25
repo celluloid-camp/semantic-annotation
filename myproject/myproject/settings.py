@@ -13,6 +13,10 @@ import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
+
+
+import myproject
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -25,7 +29,7 @@ SECRET_KEY = 'django-insecure--m=e5exs-+c9$w$#5u8k=n4x(4%(8f@%^z-%uw2hkf0-lj(9as
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['1b2a-193-55-163-97.eu.ngrok.io']
+ALLOWED_HOSTS = ['c1e5-2a02-8440-6140-ffb3-8193-aa3e-10df-2791.eu.ngrok.io','fbd3-193-55-163-97.eu.ngrok.io','localhost','testserver', 'espectateur.huma-num.fr']
 
 
 # Application definition
@@ -39,7 +43,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'myapi.apps.MyapiConfig',
     'django_neomodel',
-    'corsheaders'
+    'corsheaders',
+
 ]
 
 MIDDLEWARE = [
@@ -87,6 +92,8 @@ WSGI_APPLICATION = 'myproject.wsgi.application'
 
 NEOMODEL_NEO4J_BOLT_URL = os.environ.get('NEO4J_BOLT_URL','bolt://neo4j:neo4jneo4j@localhost:7687')
 # you are free to add this configurations
+
+
 NEOMODEL_SIGNALS = True
 NEOMODEL_FORCE_TIMEZONE = False
 NEOMODEL_ENCRYPTED_CONNECTION = False
@@ -114,7 +121,11 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/4.0/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
-CORS_ALLOW_ALL_ORIGINS = True
+#CORS_ALLOW_ALL_ORIGINS = True
+
+CORS_ORIGIN_ALLOW_ALL = True
+
+
 Access_Control_Allow_Origin= True
 TIME_ZONE = 'UTC'
 
@@ -133,3 +144,10 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+import os
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "myproject.settings")
+from django.core.wsgi import get_wsgi_application
+application = get_wsgi_application()
+os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
+from neomodel import config
+config.ENCRYPTED_CONNECTION = False

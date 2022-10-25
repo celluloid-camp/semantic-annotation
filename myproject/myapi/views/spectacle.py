@@ -1,7 +1,8 @@
-﻿import numpy
+﻿
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from neomodel import db
+
 import json
 from numpy import *
 
@@ -36,12 +37,12 @@ def getConceptSubClasses(request):
     luminaryList= Parameters.Params['luminaryList']
     suitList= Parameters.Params['suitList']
     c = request.GET.get('concept')
+
     if request.method == 'GET':
         uri = path+c
         try:
             Conceptquery="MATCH (n:owl__Class)-[rdfs_subClassOf]->(f:owl__Class) WHERE f.uri='%s' RETURN n.uri" %uri
             result = db.cypher_query(Conceptquery)[0]
-            print(result)
             if(len(result)!=0):
                 iteration = len(result)
                 resUri=result[iteration-1][0]
