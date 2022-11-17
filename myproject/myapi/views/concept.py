@@ -96,6 +96,7 @@ def getConceptTreeStructur(concept):
     if len(concept)!=0:
         path=Parameters.Params['Ontology_Path']
         uri=Parameters.Params['Ontology_Path']+concept
+
         GetConceptQuery = "MATCH (n:owl__Class)-[rdf_type]-(f:owl__NamedIndividual) WHERE f.uri='%s' RETURN n.uri" % uri
         result= db.cypher_query(GetConceptQuery)
         try:
