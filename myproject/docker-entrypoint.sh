@@ -1,4 +1,6 @@
-#!/bin/bash -xe
+#!/bin/sh
+set -e
+
 python3 -c <<EOF |
 from django.db import IntegrityError
 try:
