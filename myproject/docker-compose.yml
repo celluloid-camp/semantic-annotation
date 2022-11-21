@@ -10,25 +10,22 @@ services:
     depends_on:
       - neo4j_db
     environment:
-      - NEO4J_BOLT_URL=bolt://neo4j:espectateurneo4j@neo4j_db:11009
-      - DJANGO_SETTINGS_MODULE=settings
+      - NEO4J_BOLT_URL=bolt://neo4j:espectateurneo4j@neo4j_db:7687
+      - DJANGO_SETTINGS_MODULE=myproject.settings
   neo4j_db:
     image: neo4j:4.4.0-enterprise
     ports:
-      - 11010:11010
-      - 11009:11009
+      - 11010:7474
+      - 11009:7687
     expose:
-      - 11010
-      - 11009
+      - 7474
+      - 7687
     volumes:
       - db:/data/dbms
     environment:
       - NEO4J_AUTH=neo4j/espectateurneo4j
       - NEO4J_ACCEPT_LICENSE_AGREEMENT=yes
-      - dbms.connector.bolt.listen_address=:11009
+      - dbms.connector.bolt.listen_address=:7687
       - dbms.connector.bolt.advertised_address=:7473
-    networks:
-      - mynetwork
-networks:
-  mynetwork:
-    driver: bridge
+volumes:
+  db:
