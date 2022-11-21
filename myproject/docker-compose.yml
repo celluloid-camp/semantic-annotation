@@ -4,7 +4,7 @@ services:
     build:
       dockerfile: ./Dockerfile
     ports:
-      - 8001:8000
+      - 8000:8000
     expose:
       - 8000
     depends_on:
@@ -18,8 +18,8 @@ services:
       - 11010:11010
       - 11009:11009
     expose:
-      - 7474
-      - 7687
+      - 11010
+      - 11009
     volumes:
       - db:/data/dbms
     environment:
@@ -27,5 +27,8 @@ services:
       - NEO4J_ACCEPT_LICENSE_AGREEMENT=yes
       - dbms.connector.bolt.listen_address=:11009
       - dbms.connector.bolt.advertised_address=:7473
-volumes:
-  db:
+    networks:
+      - mynetwork
+networks:
+  mynetwork:
+    driver: bridge

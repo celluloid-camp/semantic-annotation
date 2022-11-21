@@ -40,9 +40,11 @@ def getConceptSubClasses(request):
 
     if request.method == 'GET':
         uri = path+c
+        print("uri is", uri)
         try:
             Conceptquery="MATCH (n:owl__Class)-[rdfs_subClassOf]->(f:owl__Class) WHERE f.uri='%s' RETURN n.uri" %uri
             result = db.cypher_query(Conceptquery)[0]
+            print("no problem with db")
             if(len(result)!=0):
                 iteration = len(result)
                 resUri=result[iteration-1][0]

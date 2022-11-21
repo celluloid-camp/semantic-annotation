@@ -1,3 +1,5 @@
 Django==4.1.2
 django-neomodel==0.0.7
 neomodel==4.0.8
+django-cors-headers
+numpy
