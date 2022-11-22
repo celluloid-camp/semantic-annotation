@@ -91,7 +91,7 @@ DATABASES = {
 }
 
 
-NEOMODEL_NEO4J_BOLT_URL = os.environ.get('NEO4J_BOLT_URL','bolt://neo4j:espectateurneo4j@neo4j_db:7687')
+NEOMODEL_NEO4J_BOLT_URL = os.environ.get('NEO4J_BOLT_URL')
 # you are free to add this configurations
 
 

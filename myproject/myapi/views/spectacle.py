@@ -37,7 +37,7 @@ def getConceptSubClasses(request):
     luminaryList= Parameters.Params['luminaryList']
     suitList= Parameters.Params['suitList']
     c = request.GET.get('concept')
-
+    print("notre concept est")
     if request.method == 'GET':
         uri = path+c
         print("uri is", uri)
