@@ -1,6 +1,9 @@
 version: "3"
+networks:
+  local:
 services:
   backend:
+    container_name: sematic-annotation-backend
     build:
       dockerfile: ./Dockerfile
       context: .
@@ -11,18 +14,22 @@ services:
     depends_on:
       - neo4j_db
     environment:
-      - NEO4J_BOLT_URL=bolt://neo4j:espectateurneo4j@neo4j_db:11007/espneo4j
+      - NEO4J_BOLT_URL=bolt://neo4j:espectateurneo4j@neo4j_db:7687/espectateur
       - DJANGO_SETTINGS_MODULE=myproject.settings
+    networks:
+      - local
   neo4j_db:
+    container_name: sematic-annotation-neo4j
     image: neo4j:4.4.0-enterprise
     ports:
-      - 11008:7474
-      - 11007:7687
-    expose:
-      - 7474
-      - 7687
+      - 7474:7474
+      - 7687:7687
+    healthcheck:
+      test: [ "CMD-SHELL", "echo RETURN 1 | cypher-shell -a 7687 -u neo4j -p espectateurneo4j || exit 1" ]      
     volumes:
-      - db:/data/dbms
+      - ./.neo4j/plugins:/plugins
+      - ./.neo4j/data:/data
+      - ./.neo4j/import:/var/lib/neo4j/import
       - ./dump:/dump
     environment:
       - NEO4J_AUTH=neo4j/espectateurneo4j
@@ -31,6 +38,8 @@ services:
       - dbms.connector.bolt.advertised_address=:7473
       - NEO4JLABS_PLUGINS=["apoc", "n10s"]
       - dbms.allow_upgrade=true
+    networks:
+      - local
 volumes:
   db:
   
