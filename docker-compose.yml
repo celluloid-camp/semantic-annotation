@@ -6,7 +6,7 @@ services:
     container_name: sematic-annotation-backend
     build:
       dockerfile: ./Dockerfile
-      context: .
+      context: ./myproject
     ports:
       - 8000:8000
     expose:
