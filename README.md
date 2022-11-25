@@ -1,4 +1,7 @@
-# Restore Neo4j database
+## Semantic Annotation
+
+[![Docker Build](https://github.com/celluloid-camp/semantic-annotation/actions/workflows/docker-build.yml/badge.svg?event=push)](https://github.com/celluloid-camp/semantic-annotation/actions/workflows/docker-build.yml)
+## Restore Neo4j database
 
 First test if the neo4j is ready and `espectateur` database doesn't exists:
 
@@ -20,7 +23,7 @@ Create the database after the load operation finishes :
 ```
 
 
-## documentation for neo4j 4.4 
+## References
 
     - https://neo4j.com/docs/operations-manual/4.4/backup-restore/restore-dump/
     - https://neo4j.com/docs/cypher-manual/4.4/databases/#administration-databases-stop-database
