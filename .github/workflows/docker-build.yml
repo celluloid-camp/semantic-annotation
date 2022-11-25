@@ -27,4 +27,4 @@ jobs:
           context: ./myproject
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}:${{ github.event.inputs.tag }}
+            ghcr.io/${{ github.repository }}:latest
