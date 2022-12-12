@@ -16,15 +16,15 @@ def getFirstConcepts(request):
     if request.method == 'GET':
         try:
             resultStaging='Staging'
-            resultEmotion='Emotion'
+            #  resultEmotion='Emotion'
             resultActing='Acting'
-            resultJudgement='Judgement'
+            # resultJudgement='Judgement'
             resultDramaturgy = 'Dramaturgy'
-            annotationLibre='Annotation Libre'
+            # annotationLibre='Annotation Libre'
 
             response = {
-                "concept": [resultEmotion,resultStaging,
-                 resultActing,resultDramaturgy,resultJudgement, annotationLibre ]
+                "concept": [resultStaging,
+                 resultActing,resultDramaturgy]
             }
             return JsonResponse(response, safe=False)
         except:
